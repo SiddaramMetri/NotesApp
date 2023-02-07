@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "./components/Button";
 import MessageBox from "./components/MessageBox";
 import Model from "./components/Model";
@@ -9,6 +9,17 @@ function App() {
   const [notes, setNotes] = useState([]);
   const [activeNote, setActiveNote] = useState(-1);
   const [isEditable, setIsEditable] = useState(false);
+  const [isFirstRender, setIsFirstRender] = useState(true);
+
+  const addNotesLocalStorage = () => {
+    isFirstRender
+      ? setNotes(JSON.parse(localStorage.getItem("notes")))
+      : localStorage.setItem("notes", JSON.stringify(notes));
+    setIsFirstRender(false);
+  };
+
+  useEffect(addNotesLocalStorage, [notes, isFirstRender]);
+
   return (
     <>
       <div className="m-6  flex-col  items-center justify-center">
