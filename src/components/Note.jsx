@@ -1,13 +1,13 @@
-const NotesList = (props) => {
+const Note = (props) => {
   return (
-    <div>
+    <div onClick={props.onClick}>
       <div className="max-w-sm rounded overflow-hidden shadow-lg">
         <div className="px-6 py-4">
-          <p className="text-gray-700 text-base">{props.note.textMessage}</p>
+          <p className="text-gray-700 text-base">{props.note}</p>
         </div>
       </div>
     </div>
   );
 };
 
-export default NotesList;
+export default Note;
