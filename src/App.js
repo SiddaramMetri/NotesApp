@@ -3,22 +3,34 @@ import Button from "./components/Button";
 import MessageBox from "./components/MessageBox";
 import Model from "./components/Model";
 import Note from "./components/Note";
+import SearchBar from "./components/SearchBar";
 
 function App() {
   const [textmsg, setTextMsg] = useState("");
   const [notes, setNotes] = useState([]);
-  const [activeNote, setActiveNote] = useState(-1);
+  const [activeNote, setActiveNote] = useState(null);
   const [isEditable, setIsEditable] = useState(false);
   const [isFirstRender, setIsFirstRender] = useState(true);
+  const [searchText, setSearchText] = useState("");
+  const [prevNotes, setPrevNotes] = useState([]);
 
   const addNotesLocalStorage = () => {
     isFirstRender
-      ? setNotes(JSON.parse(localStorage.getItem("notes")))
+      ? setNotes(JSON.parse(localStorage.getItem("notes")) || [])
       : localStorage.setItem("notes", JSON.stringify(notes));
     setIsFirstRender(false);
   };
 
   useEffect(addNotesLocalStorage, [notes, isFirstRender]);
+
+  const searchHandle = () => {
+    const searchNotes = notes.filter((note) => {
+      return note.textmsg.includes(searchText);
+    });
+    setPrevNotes(searchNotes);
+  };
+
+  useEffect(searchHandle, [notes, searchText]); // eslint-disable-line
 
   return (
     <>
@@ -38,31 +50,37 @@ function App() {
                 alert("The Notes cannot be Empty! Please Add the Notes");
                 return;
               }
-              setNotes((prev) => [textmsg, ...prev]);
-
+              setNotes((prev) => [
+                { id: Number(new Date()), textmsg },
+                ...prev,
+              ]);
               setTextMsg("");
             }}
             text="Add Notes"
           />
         </div>
+        <div className="flex flex-col items-center my-4 mt-10 justify-center w-full">
+          <SearchBar value={searchText} onChange={setSearchText} />
+        </div>
         <div className="mt-5 flex flex-wrap gap-6 items-center justify-center">
-          {notes.map((note, i) => {
+          {prevNotes.map((note) => {
             return (
               <Note
-                key={i}
-                note={note}
+                key={note.id}
+                note={note.textmsg}
                 onClick={() => {
-                  setActiveNote(i);
+                  setActiveNote(note.id);
                 }}
               />
             );
           })}
         </div>
       </div>
+
       <Model
-        show={activeNote > -1}
+        show={!!activeNote}
         onClose={() => {
-          setActiveNote(-1);
+          setActiveNote(null);
         }}
       >
         {isEditable ? (
@@ -70,10 +88,17 @@ function App() {
             onBlur={() => {
               setIsEditable(false);
             }}
-            textmsg={notes[activeNote]}
+            textmsg={
+              notes.find((note) => {
+                return note.id === activeNote;
+              })?.textmsg
+            }
             onChange={(value) => {
-              const newNotes = [...notes];
-              newNotes[activeNote] = value;
+              const newNotes = notes.map((note) => {
+                if (note.id === activeNote)
+                  return { id: note.id, textmsg: value };
+                return note;
+              });
               setNotes(newNotes);
             }}
             className={"w-full"}
@@ -85,16 +110,20 @@ function App() {
                 setIsEditable(true);
               }}
             >
-              {notes[activeNote]}
+              {
+                notes.find((note) => {
+                  return note.id === activeNote;
+                })?.textmsg
+              }
             </p>
             <button
               onClick={() => {
                 setNotes(
-                  notes.filter((_note, i) => {
-                    return i !== activeNote;
+                  notes.filter((note) => {
+                    return note.id !== activeNote;
                   })
                 );
-                setActiveNote(-1);
+                setActiveNote(null);
               }}
               className="text-sm text-white bg-red-600 p-1 px-2 rounded shadow float-right"
             >
